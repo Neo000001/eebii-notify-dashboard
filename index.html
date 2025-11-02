@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Eebii Notify — Portal</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .card{ @apply bg-white border border-slate-200 rounded-2xl shadow-sm p-5; }
+    .btn{ @apply inline-flex items-center justify-center px-4 py-2 rounded-xl font-medium transition; }
+    .btn-primary{ @apply bg-indigo-600 text-white hover:bg-indigo-700; }
+    .btn-muted{ @apply bg-slate-100 hover:bg-slate-200; }
+    .input{ @apply w-full border border-slate-300 rounded-xl px-3 py-2; }
+    .label{ @apply text-sm font-semibold text-slate-600; }
+    .grid-2{ @apply grid grid-cols-1 md:grid-cols-2 gap-4; }
+    .grid-3{ @apply grid grid-cols-1 md:grid-cols-3 gap-4; }
+    pre{white-space:pre-wrap;word-break:break-word}
+    .toast{ @apply fixed top-4 right-4 bg-black text-white text-sm px-4 py-2 rounded-lg shadow-lg opacity-0 translate-y-2; transition:.25s; }
+    .toast.show{ @apply opacity-100 translate-y-0; }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+  <!-- toast -->
+  <div id="toast" class="toast">Saved</div>
+
+  <div class="max-w-7xl mx-auto px-4 py-8">
+    <header class="mb-6 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-indigo-600 grid place-items-center text-white font-bold">E</div>
+        <div>
+          <h1 class="text-2xl font-bold leading-tight">Eebii Notify</h1>
+          <p class="text-slate-500 text-sm -mt-1">WhatsApp notifications — text, template, media & bulk</p>
+        </div>
+      </div>
+      <a href="#" class="text-indigo-600 text-sm" onclick="location.reload()">Refresh</a>
+    </header>
+
+    <!-- Settings -->
+    <section class="card mb-6">
+      <h2 class="font-semibold mb-3">Connection</h2>
+      <div class="grid-2">
+        <div>
+          <label class="label">API Base URL</label>
+          <input id="baseUrl" class="input" placeholder="https://eebii-api.onrender.com" />
+        </div>
+        <div>
+          <label class="label">X-API-Key</label>
+          <input id="apiKey" class="input" placeholder="paste your API key…" />
+        </div>
+      </div>
+      <div class="mt-3 flex gap-3">
+        <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+        <button class="btn btn-muted" onclick="ping()">Test / (root)</button>
+      </div>
+      <pre id="logSettings" class="mt-3 text-xs text-slate-600"></pre>
+    </section>
+
+    <div class="grid md:grid-cols-2 gap-6">
+      <!-- Send Text -->
+      <section class="card">
+        <h2 class="font-semibold mb-3">Send Text</h2>
+        <div class="grid-2">
+          <div>
+            <label class="label">To (E.164)</label>
+            <input id="txtTo" class="input" placeholder="+91963xxxxxxx" />
+          </div>
+          <div>
+            <label class="label">Message</label>
+            <input id="txtMsg" class="input" placeholder="Hello from Eebii!" />
+          </div>
+        </div>
+        <div class="mt-3">
+          <button class="btn btn-primary" onclick="sendText()">Send</button>
+        </div>
+        <pre id="logText" class="mt-3 text-xs"></pre>
+      </section>
+
+      <!-- Upload Media + Send -->
+      <section class="card">
+        <h2 class="font-semibold mb-3">Upload Media & Send</h2>
+        <div class="grid-2">
+          <div>
+            <label class="label">File (image/pdf/video)</label>
+            <input id="mediaFile" type="file" class="input" />
+          </div>
+          <div>
+            <label class="label">To (E.164)</label>
+            <input id="mediaTo" class="input" placeholder="+91…" />
+          </div>
+        </div>
+        <div class="mt-3 flex gap-3">
+          <button class="btn btn-muted" onclick="uploadMedia()">1) Upload</button>
+          <button class="btn btn-primary" onclick="sendMedia()">2) Send</button>
+        </div>
+        <pre id="logMedia" class="mt-3 text-xs"></pre>
+      </section>
+
+      <!-- Templates -->
+      <section class="card">
+        <h2 class="font-semibold mb-3">Templates</h2>
+        <div class="flex gap-3 mb-3">
+          <button class="btn btn-muted" onclick="listTemplates()">List Templates</button>
+        </div>
+        <div class="grid-3">
+          <div>
+            <label class="label">Template Name</label>
+            <input id="tplName" class="input" placeholder="hello_world" />
+          </div>
+          <div>
+            <label class="label">Language</label>
+            <input id="tplLang" class="input" value="en_US" />
+          </div>
+          <div>
+            <label class="label">To (E.164)</label>
+            <input id="tplTo" class="input" placeholder="+91…" />
+          </div>
+        </div>
+        <div class="mt-3">
+          <label class="label">Body Params (comma)</label>
+          <input id="tplParams" class="input" placeholder="Abhilash, #12345" />
+        </div>
+        <div class="mt-3">
+          <button class="btn btn-primary" onclick="sendTemplate()">Send Template</button>
+        </div>
+        <pre id="logTpl" class="mt-3 text-xs"></pre>
+      </section>
+
+      <!-- Contacts & Groups -->
+      <section class="card">
+        <h2 class="font-semibold mb-3">Contacts & Groups</h2>
+        <div class="mb-3 flex gap-3">
+          <button class="btn btn-muted" onclick="listContacts()">List Contacts</button>
+          <button class="btn btn-muted" onclick="listGroups()">List Groups</button>
+        </div>
+
+        <div class="mb-4">
+          <label class="label">Import Contacts (CSV with headers: name,phone)</label>
+          <input id="csvFile" type="file" accept=".csv" class="input" />
+          <button class="btn btn-primary mt-2" onclick="importContacts()">Import</button>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <label class="label">Create Group</label>
+            <div class="flex gap-2">
+              <input id="grpName" class="input" placeholder="Customers" />
+              <button class="btn btn-primary" onclick="createGroup()">Create</button>
+            </div>
+          </div>
+          <div>
+            <label class="label">Add Members</label>
+            <input id="grpId" class="input mb-2" placeholder="group_id e.g., 1" />
+            <input id="grpPhones" class="input" placeholder="+91…, +91…" />
+            <button class="btn btn-primary mt-2" onclick="addMembers()">Add</button>
+          </div>
+        </div>
+        <pre id="logContacts" class="mt-3 text-xs"></pre>
+      </section>
+
+      <!-- Bulk -->
+      <section class="card md:col-span-2">
+        <h2 class="font-semibold mb-3">Bulk — Preview & Send</h2>
+        <p class="text-sm text-slate-500 mb-2">Paste array of messages. Example:
+          <code>[{"to":"+91…","text":"Hi!"}]</code></p>
+        <textarea id="bulkBody" class="input" rows="6" placeholder='[{"to":"+91963…","text":"Hi A!"},{"to":"+91984…","text":"Hi B!"}]'></textarea>
+        <div class="mt-3 flex gap-3">
+          <button class="btn btn-muted" onclick="bulkPreview()">Preview</button>
+          <button class="btn btn-primary" onclick="bulkSend()">Send</button>
+        </div>
+        <pre id="logBulk" class="mt-3 text-xs"></pre>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const el = id => document.getElementById(id);
+    const toast = (msg) => { const t = el('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 1800); };
+    const log = (node, data) => node.textContent = (typeof data === 'string') ? data : JSON.stringify(data, null, 2);
+    const base = () => (localStorage.getItem('eebii_base') || 'https://eebii-api.onrender.com').replace(/\/+$/,'');
+    const key  = () => (localStorage.getItem('eebii_api_key') || '').trim();
+    const H    = () => ({ 'X-API-Key': key(), 'Content-Type': 'application/json' });
+
+    // load + save settings
+    (function init(){
+      el('baseUrl').value = base();
+      el('apiKey').value = key();
+    })();
+    function saveSettings(){
+      localStorage.setItem('eebii_base', el('baseUrl').value.trim());
+      localStorage.setItem('eebii_api_key', el('apiKey').value.trim());
+      toast('Saved');
+    }
+    async function ping(){
+      const r = await fetch(`${base()}/`, { headers: H() });
+      log(el('logSettings'), await r.json());
+    }
+
+    // send text
+    async function sendText(){
+      const body = { to: el('txtTo').value.trim(), text: el('txtMsg').value };
+      const r = await fetch(`${base()}/send/text`, { method:'POST', headers: H(), body: JSON.stringify(body) });
+      log(el('logText'), await r.json());
+    }
+
+    // media
+    let lastMediaId = null;
+    async function uploadMedia(){
+      const f = el('mediaFile').files[0];
+      if(!f) return log(el('logMedia'), 'Choose a file first.');
+      const form = new FormData();
+      form.append('file', f);
+      const r = await fetch(`${base()}/media/upload`, { method:'POST', headers:{ 'X-API-Key': key() }, body: form });
+      const j = await r.json();
+      lastMediaId = j.id || j.media_id || j?.result?.id || null;
+      log(el('logMedia'), j);
+      if(lastMediaId) toast('Uploaded ✓');
+    }
+    async function sendMedia(){
+      if(!lastMediaId) return log(el('logMedia'), 'Upload media first.');
+      const body = { to: el('mediaTo').value.trim(), media_id: lastMediaId };
+      const r = await fetch(`${base()}/send/media`, { method:'POST', headers: H(), body: JSON.stringify(body) });
+      log(el('logMedia'), await r.json());
+    }
+
+    // templates
+    async function listTemplates(){
+      const r = await fetch(`${base()}/templates`, { headers: H() });
+      log(el('logTpl'), await r.json());
+    }
+    async function sendTemplate(){
+      const to = el('tplTo').value.trim();
+      const name = el('tplName').value.trim();
+      const lang = el('tplLang').value.trim() || 'en_US';
+      const paramsRaw = el('tplParams').value.trim();
+      const params = paramsRaw ? paramsRaw.split(',').map(s=>s.trim()).filter(Boolean) : [];
+      // build components for body params
+      const components = params.length ? [{ type: "body", parameters: params.map(p=>({ type:"text", text:p })) }] : [];
+      const body = { to, template: name, lang, components };
+      const r = await fetch(`${base()}/send/template`, { method:'POST', headers: H(), body: JSON.stringify(body) });
+      log(el('logTpl'), await r.json());
+    }
+
+    // contacts & groups
+    async function listContacts(){
+      const r = await fetch(`${base()}/contacts`, { headers: H() });
+      log(el('logContacts'), await r.json());
+    }
+    async function listGroups(){
+      const r = await fetch(`${base()}/groups`, { headers: H() });
+      log(el('logContacts'), await r.json());
+    }
+    async function importContacts(){
+      const f = el('csvFile').files[0];
+      if(!f) return log(el('logContacts'), 'Pick a CSV file first.');
+      const form = new FormData();
+      form.append('file', f);
+      const r = await fetch(`${base()}/contacts/import`, { method:'POST', headers:{ 'X-API-Key': key() }, body: form });
+      log(el('logContacts'), await r.json());
+    }
+    async function createGroup(){
+      const body = { name: el('grpName').value.trim() };
+      const r = await fetch(`${base()}/groups`, { method:'POST', headers: H(), body: JSON.stringify(body) });
+      log(el('logContacts'), await r.json());
+    }
+    async function addMembers(){
+      const group_id = parseInt(el('grpId').value.trim(), 10);
+      const phones = el('grpPhones').value.split(',').map(s=>s.trim()).filter(Boolean);
+      const r = await fetch(`${base()}/groups/add`, { method:'POST', headers: H(), body: JSON.stringify({ group_id, phones }) });
+      log(el('logContacts'), await r.json());
+    }
+
+    // bulk
+    async function bulkPreview(){
+      try {
+        const messages = JSON.parse(el('bulkBody').value || '[]');
+        const r = await fetch(`${base()}/bulk/preview`, { method:'POST', headers: H(), body: JSON.stringify({ messages }) });
+        log(el('logBulk'), await r.json());
+      } catch(e){ log(el('logBulk'), 'Invalid JSON'); }
+    }
+    async function bulkSend(){
+      try {
+        const messages = JSON.parse(el('bulkBody').value || '[]');
+        const r = await fetch(`${base()}/send/bulk`, { method:'POST', headers: H(), body: JSON.stringify({ messages }) });
+        log(el('logBulk'), await r.json());
+      } catch(e){ log(el('logBulk'), 'Invalid JSON'); }
+    }
+  </script>
+</body>
+</html>
