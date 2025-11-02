@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Eebii Notify</title>
+<meta name="description" content="Send WhatsApp notifications easily with Eebii Notify."/>
+<meta property="og:title" content="Eebii Notify"/>
+<meta property="og:description" content="Bulk and templated WhatsApp messaging via WhatsApp Cloud API."/>
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<style>
+:root{
+  --bg:#0b1220;
+  --card:#121a2b;
+  --muted:#9fb2d0;
+  --brand:#6ee7ff;
+  --brand-2:#7c3aed;
+  --ok:#22c55e;
+  --warn:#fbbf24;
+  --danger:#ef4444;
+  --white:#e8f0ff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--white);font:16px/1.5 Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";}
+a{color:var(--brand);text-decoration:none}
+a:hover{opacity:.9;text-decoration:underline}
+.container{max-width:1100px;margin:0 auto;padding:24px}
+.nav{position:sticky;top:0;background:rgba(11,18,32,.85);backdrop-filter: blur(10px);border-bottom:1px solid #1f2a44;z-index:50}
+.nav-inner{display:flex;gap:18px;align-items:center;justify-content:space-between;padding:14px 24px}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{display:inline-grid;place-items:center;width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#00131a;font-weight:800}
+.brand h1{font-size:18px;margin:0}
+.badge{font-size:11px;padding:4px 8px;border-radius:999px;background:#1d2a45;color:var(--muted);border:1px solid #243354}
+.nav a{font-weight:600}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid #2a395f;border-radius:12px;background:#101a2f;color:var(--white);cursor:pointer}
+.btn:hover{border-color:#3a4b7a}
+.btn-primary{background:linear-gradient(135deg,var(--brand-2),var(--brand));border:none;color:#061019}
+.grid{display:grid;gap:18px}
+.hero{padding:64px 24px 24px}
+h2{margin:0 0 8px}
+p.lead{color:var(--muted);max-width:720px}
+.cards{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.card{background:var(--card);padding:18px;border:1px solid #1d2844;border-radius:16px}
+.card h3{margin:6px 0 8px}
+.kbd{padding:2px 6px;border:1px solid #334267;border-radius:6px;background:#0e1627;color:var(--muted);font-size:12px}
+.footer{margin-top:42px;border-top:1px solid #1f2a44;color:var(--muted)}
+.footer a{color:var(--muted);text-decoration:underline}
+.alert{border-left:4px solid var(--warn);background:#161f33;padding:12px;border-radius:8px;margin:16px 0;color:#fef3c7}
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{border-bottom:1px solid #203055;padding:10px;text-align:left;color:var(--muted)}
+.code{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;background:#0c1527;border:1px solid #1e2d4f;border-radius:10px;padding:14px;overflow:auto}
+.small{font-size:13px;color:var(--muted)}
+.notice{font-size:12px;color:var(--muted)}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px}
+.tag{font-size:11px;padding:4px 8px;border-radius:8px;border:1px solid #2a395f;color:var(--muted)}
+.price{font-weight:800}
+input[type=text]{background:#0e1628;border:1px solid #2a395f;border-radius:10px;color:var(--white);padding:10px;width:100%}
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-inner container">
+    <div class="brand">
+      <div class="logo">Ee</div>
+      <h1>Eebii Notify</h1>
+      <span class="badge">Product of <a href="https://eebii.com" target="_blank" rel="noopener">Eebii</a></span>
+    </div>
+    <div class="cta">
+      <a class="btn" href="/app/index.html">Dashboard</a>
+      <a class="btn" href="/guide/getting-started.html">Guide</a>
+      <a class="btn" href="/help/index.html">Help</a>
+    </div>
+  </div>
+</div>
+
+
+<section class="hero container">
+  <h2>Dashboard</h2>
+  <p class="lead">Connect your WhatsApp Cloud API and start sending.</p>
+  <div class="grid cards">
+    <div class="card">
+      <h3>1) Set API keys</h3>
+      <p class="small">Set these on your API server (Render → Environment):</p>
+      <div class="code small">
+        API_KEY=your_long_random_key<br/>
+        WA_TOKEN=&lt;Meta permanent token&gt;<br/>
+        WA_PHONE_ID=&lt;Meta phone number ID&gt;
+      </div>
+    </div>
+    <div class="card">
+      <h3>2) Test an API call</h3>
+      <p class="small">Use your API key in header <span class="kbd">X-API-Key</span>:</p>
+      <div class="code small" id="curl1">
+curl -X POST "https://eebii-api.onrender.com/send/text" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: YOUR_API_KEY_HERE" \
+  -d '{"to":"+911234567890","text":"Hello from Eebii!"}'
+      </div>
+      <button class="btn" data-copy='curl -X POST "https://eebii-api.onrender.com/send/text" -H "Content-Type: application/json" -H "X-API-Key: YOUR_API_KEY_HERE" -d '{"to":"+911234567890","text":"Hello from Eebii!"}''>Copy</button>
+    </div>
+    <div class="card">
+      <h3>3) Bulk send</h3>
+      <p class="small">Upload CSV then preview costs (as per Meta) before send.</p>
+      <a class="btn" href="/guide/getting-started.html#bulk">Learn how</a>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h3>Prices (from Meta)</h3>
+    <p class="small">Meta bills messages by category and region. You pay Meta directly.</p>
+    <table class="table small">
+      <tr><th>Category</th><th>Example</th></tr>
+      <tr><td>Utility</td><td>Order update, OTP, receipt</td></tr>
+      <tr><td>Marketing</td><td>Offer, new arrivals</td></tr>
+      <tr><td>Authentication</td><td>Login OTP, verify</td></tr>
+    </table>
+    <p class="notice">🇮🇳 India rates vary by category. See your WhatsApp Manager & Billing.</p>
+  </div>
+</section>
+
+
+<div class="container footer small">
+  <p>© 2025 Eebii. A product of <a href="https://eebii.com" target="_blank" rel="noopener">Eebii</a> ·
+     <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="/roadmap.html">Roadmap</a> · <a href="/about/team.html">Team & Policy</a></p>
+  <p>Contact: <a href="mailto:support@eebii.com">support@eebii.com</a> · WhatsApp: <a href="https://wa.me/918848486417" target="_blank" rel="noopener">+91 88484 86417</a></p>
+</div>
+
+<script src="/assets/app.js"></script>
+</body>
+</html>
